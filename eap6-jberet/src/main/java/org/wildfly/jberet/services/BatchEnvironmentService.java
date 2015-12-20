@@ -23,15 +23,17 @@
 package org.wildfly.jberet.services;
 
 import java.util.Properties;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+
 import javax.enterprise.inject.spi.BeanManager;
 import javax.transaction.TransactionManager;
 
 import org.jberet.repository.JobRepository;
 import org.jberet.spi.ArtifactFactory;
 import org.jberet.spi.BatchEnvironment;
+import org.jberet.spi.JobTask;
+import org.jberet.spi.JobXmlResolver;
+import org.jberet.tools.MetaInfBatchJobsJobXmlResolver;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
@@ -60,7 +62,8 @@ public class BatchEnvironmentService implements Service<BatchEnvironment> {
     private final ClassLoader classLoader;
     private BatchEnvironment batchEnvironment = null;
 
-    public BatchEnvironmentService(final ClassLoader classLoader, final JobRepository jobRepository) {
+    public BatchEnvironmentService(final ClassLoader classLoader,
+            final JobRepository jobRepository) {
         this.classLoader = classLoader;
         this.jobRepository = jobRepository;
     }
@@ -126,54 +129,6 @@ public class BatchEnvironmentService implements Service<BatchEnvironment> {
         }
 
         @Override
-        public Future<?> submitTask(final Runnable task) {
-            final ContextHandle contextHandle = createContextHandle();
-            return executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    final Handle handle = contextHandle.setup();
-                    try {
-                        task.run();
-                    } finally {
-                        handle.tearDown();
-                    }
-                }
-            });
-        }
-
-        @Override
-        public <T> Future<T> submitTask(final Runnable task, final T result) {
-            final ContextHandle contextHandle = createContextHandle();
-            return executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    final Handle handle = contextHandle.setup();
-                    try {
-                        task.run();
-                    } finally {
-                        handle.tearDown();
-                    }
-                }
-            }, result);
-        }
-
-        @Override
-        public <T> Future<T> submitTask(final Callable<T> task) {
-            final ContextHandle contextHandle = createContextHandle();
-            return executorService.submit(new Callable<T>() {
-                @Override
-                public T call() throws Exception {
-                    final Handle handle = contextHandle.setup();
-                    try {
-                        return task.call();
-                    } finally {
-                        handle.tearDown();
-                    }
-                }
-            });
-        }
-
-        @Override
         public TransactionManager getTransactionManager() {
             if (transactionManager == null) {
                 throw WildFlyBatchLogger.LOGGER.serviceNotInstalled("TransactionManager");
@@ -203,6 +158,27 @@ public class BatchEnvironmentService implements Service<BatchEnvironment> {
             final ClassLoaderContextHandle classLoaderContextHandle = (tccl == null ? new ClassLoaderContextHandle(classLoader) : new ClassLoaderContextHandle(tccl));
             // Class loader handle must be first so the TCCL is set before the other handles execute
             return new ChainedContextHandle(classLoaderContextHandle, new NamespaceContextHandle(), new SecurityContextHandle());
+        }
+
+        @Override
+        public JobXmlResolver getJobXmlResolver() {
+            return new MetaInfBatchJobsJobXmlResolver();
+        }
+
+        @Override
+        public void submitTask(final JobTask task) {
+            final ContextHandle contextHandle = createContextHandle();
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    final Handle handle = contextHandle.setup();
+                    try {
+                        task.run();
+                    } finally {
+                        handle.tearDown();
+                    }
+                }
+            });
         }
     }
 }

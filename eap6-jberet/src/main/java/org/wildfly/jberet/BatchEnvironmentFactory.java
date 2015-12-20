@@ -23,15 +23,17 @@
 package org.wildfly.jberet;
 
 import java.util.Properties;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Future;
+
 import javax.transaction.TransactionManager;
 
 import org.jberet.repository.JobRepository;
 import org.jberet.spi.ArtifactFactory;
 import org.jberet.spi.BatchEnvironment;
+import org.jberet.spi.JobTask;
+import org.jberet.spi.JobXmlResolver;
+import org.jberet.tools.MetaInfBatchJobsJobXmlResolver;
 import org.wildfly.jberet._private.WildFlyBatchLogger;
 import org.wildfly.security.manager.WildFlySecurityManager;
 
@@ -54,21 +56,6 @@ public class BatchEnvironmentFactory {
         }
 
         @Override
-        public Future<?> submitTask(final Runnable runnable) {
-            throw WildFlyBatchLogger.LOGGER.invalidBatchEnvironment();
-        }
-
-        @Override
-        public <T> Future<T> submitTask(final Runnable runnable, final T t) {
-            throw WildFlyBatchLogger.LOGGER.invalidBatchEnvironment();
-        }
-
-        @Override
-        public <T> Future<T> submitTask(final Callable<T> callable) {
-            throw WildFlyBatchLogger.LOGGER.invalidBatchEnvironment();
-        }
-
-        @Override
         public TransactionManager getTransactionManager() {
             throw WildFlyBatchLogger.LOGGER.invalidBatchEnvironment();
         }
@@ -87,6 +74,16 @@ public class BatchEnvironmentFactory {
         @Deprecated
         public Properties getBatchConfigurationProperties() {
             throw WildFlyBatchLogger.LOGGER.invalidBatchEnvironment();
+        }
+
+        @Override
+        public void submitTask(JobTask task) {
+            throw WildFlyBatchLogger.LOGGER.invalidBatchEnvironment();
+        }
+
+        @Override
+        public JobXmlResolver getJobXmlResolver() {
+            return new MetaInfBatchJobsJobXmlResolver();
         }
     };
 
@@ -111,7 +108,8 @@ public class BatchEnvironmentFactory {
     }
 
     public void add(final BatchEnvironment batchEnvironment) {
-        add(WildFlySecurityManager.getCurrentContextClassLoaderPrivileged(), batchEnvironment);
+        add(WildFlySecurityManager.getCurrentContextClassLoaderPrivileged(),
+                batchEnvironment);
     }
 
     public void add(final ClassLoader cl, final BatchEnvironment batchEnvironment) {

@@ -26,6 +26,11 @@
 			<groupId>org.jboss.as</groupId>
 			<artifactId>jboss-as-security</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.wildfly.security</groupId>
+			<artifactId>wildfly-security-manager</artifactId>
+			<version>${version.org.wildfly.security.wildfly-security-manager}</version>
+		</dependency>
 	</dependencies>
 
 </project>
