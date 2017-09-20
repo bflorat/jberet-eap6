@@ -57,22 +57,21 @@ public class BatchEnvironmentService implements Service<BatchEnvironment> {
     private final InjectedValue<BeanManager> beanManagerInjector = new InjectedValue<BeanManager>();
     private final InjectedValue<ExecutorService> executorServiceInjector = new InjectedValue<ExecutorService>();
     private final InjectedValue<TransactionManager> transactionManagerInjector = new InjectedValue<TransactionManager>();
+    private final InjectedValue<JobRepository> jobRepositoryInjector = new InjectedValue<JobRepository>();
 
-    private final JobRepository jobRepository;
     private final ClassLoader classLoader;
     private BatchEnvironment batchEnvironment = null;
 
-    public BatchEnvironmentService(final ClassLoader classLoader,
-            final JobRepository jobRepository) {
+    public BatchEnvironmentService(final ClassLoader classLoader) {
         this.classLoader = classLoader;
-        this.jobRepository = jobRepository;
     }
 
     @Override
     public synchronized void start(final StartContext context) throws StartException {
         WildFlyBatchLogger.LOGGER.debugf("Creating batch environment; %s", classLoader);
         final BatchEnvironment batchEnvironment = new WildFlyBatchEnvironment(beanManagerInjector.getOptionalValue(),
-                executorServiceInjector.getValue(), transactionManagerInjector.getOptionalValue());
+                executorServiceInjector.getValue(), transactionManagerInjector.getOptionalValue(),
+                jobRepositoryInjector.getValue());
         // Add the service to the factory
         BatchEnvironmentFactory.getInstance().add(classLoader, batchEnvironment);
         this.batchEnvironment = batchEnvironment;
@@ -102,17 +101,25 @@ public class BatchEnvironmentService implements Service<BatchEnvironment> {
         return transactionManagerInjector;
     }
 
+    public InjectedValue<JobRepository> getJobRepositoryInjector() {
+        return jobRepositoryInjector;
+    }
+
     private class WildFlyBatchEnvironment implements BatchEnvironment {
 
         private final ArtifactFactory artifactFactory;
         private final ExecutorService executorService;
         private final TransactionManager transactionManager;
+        private final JobRepository jobRepository;
 
         WildFlyBatchEnvironment(final BeanManager beanManager,
-                                final ExecutorService executorService, final TransactionManager transactionManager) {
+                                final ExecutorService executorService,
+                                final TransactionManager transactionManager,
+                                final JobRepository jobRepository) {
             artifactFactory = (beanManager == null ? null : new WildFlyArtifactFactory(beanManager));
             this.executorService = executorService;
             this.transactionManager = transactionManager;
+            this.jobRepository = jobRepository;
         }
 
         @Override
@@ -138,7 +145,7 @@ public class BatchEnvironmentService implements Service<BatchEnvironment> {
 
         @Override
         public JobRepository getJobRepository() {
-            return jobRepository;
+            return this.jobRepository;
         }
 
         /**

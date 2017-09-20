@@ -108,6 +108,11 @@
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.as</groupId>
+				<artifactId>jboss-as-connector</artifactId>
+				<version>7.2.0.Final</version>
+			</dependency>
+			<dependency>
+				<groupId>org.jboss.as</groupId>
 				<artifactId>jboss-as-security</artifactId>
 				<version>7.2.0.Final</version>
 			</dependency>

@@ -1,5 +1,6 @@
 package org.wildfly.extension.batch;
 
+import org.jboss.as.connector.subsystems.datasources.AbstractDataSourceService;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.threads.ThreadsServices;
 import org.jboss.msc.service.ServiceName;
@@ -21,6 +22,8 @@ public class BatchServiceNames {
      */
     public static final ServiceName BATCH_THREAD_POOL_NAME = BASE_BATCH_THREAD_POOL_NAME.append("batch");
 
+    public static final ServiceName JDBC_JOB_REPOSITORY_NAME = BASE_BATCH_THREAD_POOL_NAME.append("jdbc").append("repository");
+
     /**
      * Creates a service name for the deployment unit to define the service.
      *
@@ -41,5 +44,9 @@ public class BatchServiceNames {
      */
     public static ServiceName beanManagerServiceName(final DeploymentUnit deploymentUnit) {
         return deploymentUnit.getServiceName().append("beanmanager");
+    }
+
+    public static ServiceName dataSourceServiceName(final String jndiName) {
+        return ServiceName.JBOSS.append("data-source").append(jndiName);
     }
 }

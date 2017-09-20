@@ -24,6 +24,10 @@
 			<artifactId>jboss-as-subsystem-test-framework</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.jboss.as</groupId>
+			<artifactId>jboss-as-connector</artifactId>
+		</dependency>
 	</dependencies>
 
 </project>

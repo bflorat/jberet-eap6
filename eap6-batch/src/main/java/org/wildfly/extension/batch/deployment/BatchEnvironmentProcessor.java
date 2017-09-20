@@ -26,6 +26,7 @@ import java.util.concurrent.ExecutorService;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.transaction.TransactionManager;
 
+import org.jberet.repository.JobRepository;
 import org.jberet.spi.BatchEnvironment;
 import org.jboss.as.ee.component.EEModuleDescription;
 import org.jboss.as.ee.structure.DeploymentType;
@@ -60,15 +61,11 @@ public class BatchEnvironmentProcessor implements DeploymentUnitProcessor {
             // Get the class loader
             final Module module = deploymentUnit.getAttachment(Attachments.MODULE);
             final ClassLoader moduleClassLoader = module.getClassLoader();
-
             final ServiceTarget serviceTarget = phaseContext.getServiceTarget();
-
-            final EEModuleDescription moduleDescription = deploymentUnit.getAttachment(org.jboss.as.ee.component.Attachments.EE_MODULE_DESCRIPTION);
-
-            final BatchEnvironmentService service = new BatchEnvironmentService(moduleClassLoader, JobRepositoryFactory.getInstance().getJobRepository(moduleDescription));
+            final BatchEnvironmentService service = new BatchEnvironmentService(moduleClassLoader);
             final ServiceBuilder<BatchEnvironment> serviceBuilder = serviceTarget.addService(BatchServiceNames.batchDeploymentServiceName(deploymentUnit), service);
             serviceBuilder.addDependency(BatchServiceNames.BATCH_THREAD_POOL_NAME, ExecutorService.class, service.getExecutorServiceInjector());
-
+            serviceBuilder.addDependency(BatchServiceNames.JDBC_JOB_REPOSITORY_NAME, JobRepository.class, service.getJobRepositoryInjector());
             // Only add transactions and the BeanManager if this is a batch deployment
             if (isBatchDeployment(deploymentUnit)) {
                 BatchLogger.LOGGER.tracef("Adding UserTransaction and BeanManager service dependencies for deployment %s", deploymentUnit.getName());
@@ -79,6 +76,7 @@ public class BatchEnvironmentProcessor implements DeploymentUnitProcessor {
             } else {
                 BatchLogger.LOGGER.tracef("Skipping UserTransaction and BeanManager service dependencies for deployment %s", deploymentUnit.getName());
             }
+
 
             serviceBuilder.install();
         }

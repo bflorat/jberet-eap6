@@ -22,9 +22,10 @@
 
 package org.wildfly.extension.batch;
 
-import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
+import org.jberet.repository.JobRepository;
 import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationContext;
@@ -40,9 +41,14 @@ import org.jboss.as.controller.operations.validation.StringLengthValidator;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
+import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceTarget;
+import org.wildfly.extension.batch.job.repository.JobRepositoryService;
 import org.wildfly.extension.batch.job.repository.JobRepositoryFactory;
 import org.wildfly.extension.batch.job.repository.JobRepositoryType;
+
+import javax.sql.DataSource;
 
 /**
  * A job repository resource used to configure settings of a {@link BatchSubsystemDefinition#JOB_REPOSITORY_TYPE job
@@ -100,10 +106,16 @@ class JobRepositoryDefinition extends SimpleResourceDefinition {
 
 		@Override
         protected void performRuntime(final OperationContext context, final ModelNode operation, final ModelNode model, final ServiceVerificationHandler verificationHandler, final List<ServiceController<?>> newControllers) throws OperationFailedException {
+            final JobRepositoryService service = new JobRepositoryService();
+            final ServiceTarget serviceTarget = context.getServiceTarget();
+            final ServiceBuilder<JobRepository> serviceBuilder = serviceTarget.addService(BatchServiceNames.JDBC_JOB_REPOSITORY_NAME, service);
+            serviceBuilder.addDependency(BatchServiceNames.BATCH_THREAD_POOL_NAME, ExecutorService.class, service.getExecutorServiceInjector());
             final ModelNode jndiName = JNDI_NAME.resolveModelAttribute(context, model);
             if (jndiName.isDefined()) {
                 JobRepositoryFactory.getInstance().setJndiName(jndiName.asString());
+                serviceBuilder.addDependency(BatchServiceNames.dataSourceServiceName(jndiName.asString()),DataSource.class, service.getDataSourceInjector());
             }
+            serviceBuilder.install();
         }
     }
 }
