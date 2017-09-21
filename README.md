@@ -1,12 +1,16 @@
 # JBeret Batch API for EAP6
 
 Backport of Batch API subsystem to EAP6
+ 
+Tested on JBoss EAP 6.2.4, 6.3 and 6.4.
 
-Tested on JBoss EAP 6.2.4 and 6.3.
+## Bug Fix
 
+* Batch-jberet subsystem starting up before datasource ready leads to application start failed.
 
 ## Downloads
 
+* Refer to build section to get eap6-batch-dist-1.0.3.zip
 * [eap6-batch-dist-1.0.2.zip](http://www.e-contract.be/maven2/org/jberet/eap6/eap6-batch-dist/1.0.2/eap6-batch-dist-1.0.2.zip)
 * [eap6-batch-dist-1.0.1.zip](http://www.e-contract.be/maven2/org/jberet/eap6/eap6-batch-dist/1.0.1/eap6-batch-dist-1.0.1.zip)
 * [eap6-batch-dist-1.0.0.zip](http://www.e-contract.be/maven2/org/jberet/eap6/eap6-batch-dist/1.0.0/eap6-batch-dist-1.0.0.zip)

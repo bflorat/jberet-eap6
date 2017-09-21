@@ -68,7 +68,7 @@ public class JobRepositoryFactory {
     }
 
     public boolean requiresJndiName() {
-        return JobRepositoryType.JDBC == type && jndiName == null;
+        return JobRepositoryType.JDBC == type && jndiName != null;
     }
 
     public void setJndiName(final String jndiName) {
